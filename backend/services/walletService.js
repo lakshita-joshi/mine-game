@@ -8,18 +8,16 @@ export class InsufficientFundsError extends Error {
   }
 }
 
-/**
- * Atomically deducts a stake IF the user has enough balance.
- * Uses a single conditional update instead of read-then-write,
- * so two simultaneous requests can't both pass a balance check
- * and double-spend the same coins.
- */
 export async function deductStake(userId, amount) {
+  console.log("deductStake called with:", { userId, typeofUserId: typeof userId, amount, typeofAmount: typeof amount });
+
   const user = await User.findOneAndUpdate(
     { _id: userId, coins: { $gte: amount } },
     { $inc: { coins: -amount } },
     { new: true }
   );
+
+  console.log("findOneAndUpdate result:", user);
 
   if (!user) throw new InsufficientFundsError();
   return user.coins;
