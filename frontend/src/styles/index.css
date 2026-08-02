@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #060b16;
+}
+
+/* Ambient sonar sweep behind the grid — signature motion element */
+.sonar-sweep {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(47, 143, 255, 0.08) 40deg,
+    transparent 90deg,
+    transparent 360deg
+  );
+  animation: sweepRotate 7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sweepRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 3D tile flip reveal */
+.tile-flip {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.tile-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+  perspective: 600px;
+}
+
+.tile-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.tile-face-back {
+  transform: rotateY(180deg);
+}
+
+/* Range slider thumb */
+input[type="range"] {
+  height: 4px;
+  border-radius: 2px;
+  background: #22456c;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2f8fff;
+  cursor: pointer;
+  border: 2px solid #eaf3ff;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-pulse,
+  .sonar-sweep,
+  .tile-inner {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
