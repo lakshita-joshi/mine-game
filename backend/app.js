@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const allowedOrigins = [
-  "https://mine-game-lovat.vercel.app",
+  "https://mine-game-1.onrender.com",
   "http://localhost:5173"
 ];
 
