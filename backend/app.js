@@ -10,7 +10,22 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+const allowedOrigins = [
+  "https://mine-game-lovat.vercel.app",
+  "http://localhost:5173"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman, curl, mobile apps)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
 app.use('/api/auth', authRoutes);
 app.use("/api/mines", minesRoutes);
 
