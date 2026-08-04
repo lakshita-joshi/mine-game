@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import minesRoutes from "./routes/minesRoutes.js";
 import authRoutes from './routes/authRoutes.js';
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(cors({
 }));
 app.use('/api/auth', authRoutes);
 app.use("/api/mines", minesRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

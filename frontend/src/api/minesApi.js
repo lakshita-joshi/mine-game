@@ -50,3 +50,13 @@ export const authApi = {
     request("/api/auth/login", { method: "POST", body: { username, password } }),
   logout: () => request("/api/auth/logout", { method: "POST" }),
 };
+
+export const adminApi = {
+  getStats: () => request("/api/admin/stats"),
+  listUsers: ({ search = "", page = 1, limit = 20 } = {}) =>
+    request(`/api/admin/users?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`),
+  getUser: (id) => request(`/api/admin/users/${id}`),
+  updateUser: (id, body) => request(`/api/admin/users/${id}`, { method: "PATCH", body }),
+  listSessions: ({ status = "", gameType = "", page = 1, limit = 20 } = {}) =>
+    request(`/api/admin/sessions?status=${status}&gameType=${gameType}&page=${page}&limit=${limit}`),
+};

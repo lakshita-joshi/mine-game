@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Radar, LogOut, Coins } from "lucide-react";
+import { Radar, LogOut, Coins, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function NavBar({ backLink }) {
@@ -16,6 +16,16 @@ export default function NavBar({ backLink }) {
       </Link>
 
       <div className="flex items-center gap-3">
+        {user?.role === "admin" && (
+          <Link
+            to="/admin"
+            className="flex items-center gap-1.5 rounded-full border border-panel-border bg-abyss-edge px-3 py-1.5 text-xs text-muted transition-colors hover:border-sonar hover:text-sonar"
+          >
+            <ShieldCheck size={14} />
+            Admin
+          </Link>
+        )}
+
         <div className="flex items-center gap-2 rounded-full border border-panel-border bg-abyss-edge px-4 py-1.5">
           <Coins size={16} className="text-sonar" />
           <span className="font-mono text-sm font-semibold text-ice">

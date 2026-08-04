@@ -6,6 +6,9 @@ import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import MinesGamePage from "./pages/MinesGamePage.jsx";
+import RequireAdmin from "./components/admin/requireAdmin.jsx";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
+import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
 
 export default function App() {
   return (
@@ -32,6 +35,26 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+  path="/admin"
+  element={
+    <ProtectedRoute>
+      <RequireAdmin>
+        <AdminDashboardPage />
+      </RequireAdmin>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/users"
+  element={
+    <ProtectedRoute>
+      <RequireAdmin>
+        <AdminUsersPage />
+      </RequireAdmin>
+    </ProtectedRoute>
+  }
+/>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
