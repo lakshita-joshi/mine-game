@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    const token = signToken({ userId: user._id.toString() });
+    const token = signToken({ userId: user._id.toString(), role: user.role });
     res.cookie(process.env.COOKIE_NAME || 'token', token, cookieOptions);
     res.status(200).json({ user: user.toJSON() });
   } catch (err) {
