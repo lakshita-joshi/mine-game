@@ -101,9 +101,14 @@ export async function getStats(req, res) {
   });
 }
 
+const emptyToUndefined = (val) => (val === "" ? undefined : val);
+
 const listSessionsSchema = z.object({
-  status: z.enum(["active", "cashed_out", "busted"]).optional(),
-  gameType: z.string().optional(),
+  status: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.enum(["active", "cashed_out", "busted"]).optional()
+  ),
+  gameType: z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
