@@ -9,7 +9,7 @@ import MinesGamePage from "./pages/MinesGamePage.jsx";
 import RequireAdmin from "./components/admin/requireAdmin.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
-import CrashGamePage from "./pages/crashGamePage.jsx";
+import CrashGamePage from "./pages/CrashGamePage.jsx";
 
 export default function App() {
   return (

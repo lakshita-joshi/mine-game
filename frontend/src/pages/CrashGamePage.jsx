@@ -5,7 +5,6 @@ import { useCrashSocket } from "../hooks/useCrashSocket.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function CrashGamePage() {
-  const { setCoins } = useAuth();
   const [stake, setStake] = useState(10);
   const {
     connected, phase, serverSeedHash, liveMultiplier,
