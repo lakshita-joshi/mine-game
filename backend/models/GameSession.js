@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 const gameSessionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    gameType: { type: String, required: true, enum: ["mines"] }, // extend enum as games are added
-
+    gameType: { type: String, required: true, enum: ["mines", "crash"] },
     stake: { type: Number, required: true },
     status: {
       type: String,
@@ -19,9 +18,9 @@ const gameSessionSchema = new mongoose.Schema(
     serverSeedHash: { type: String, required: true },
     clientSeed: { type: String, required: true },
     nonce: { type: Number, required: true },
-
-    // Game-specific payload. For Mines: { gridSize, mineCount, minePositions, revealedTiles }
+    // Game-specific payload.
     gameData: { type: mongoose.Schema.Types.Mixed, required: true, select: false },
+    
   },
   { timestamps: true }
 );

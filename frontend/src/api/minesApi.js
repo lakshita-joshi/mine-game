@@ -60,3 +60,8 @@ export const adminApi = {
   listSessions: ({ status = "", gameType = "", page = 1, limit = 20 } = {}) =>
     request(`/api/admin/sessions?status=${status}&gameType=${gameType}&page=${page}&limit=${limit}`),
 };
+
+export const walletApi = {
+  claimDaily: () => request("/api/wallet/claim-daily", { method: "POST" }),
+  balance: () => request("/api/wallet/balance"),
+};

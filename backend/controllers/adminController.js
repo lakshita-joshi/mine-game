@@ -101,8 +101,6 @@ export async function getStats(req, res) {
   });
 }
 
-const emptyToUndefined = (val) => (val === "" ? undefined : val);
-
 const listSessionsSchema = z.object({
   status: z.preprocess(
     (val) => (val === "" ? undefined : val),

@@ -9,6 +9,7 @@ import MinesGamePage from "./pages/MinesGamePage.jsx";
 import RequireAdmin from "./components/admin/requireAdmin.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
+import CrashGamePage from "./pages/crashGamePage.jsx";
 
 export default function App() {
   return (
@@ -17,6 +18,14 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+  path="/games/crash"
+  element={
+    <ProtectedRoute>
+      <CrashGamePage />
+    </ProtectedRoute>
+  }
+/>
 
           <Route
             path="/dashboard"

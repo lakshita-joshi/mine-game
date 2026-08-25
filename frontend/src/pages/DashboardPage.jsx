@@ -1,8 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Gem, CircleDot, Lock } from "lucide-react";
+import { Gem, CircleDot, Lock, Rocket } from "lucide-react";
 import NavBar from "../components/layout/NavBar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import DailyBonusCard from "../components/dashboard/DailyBonusCard.jsx";
 
 // Static catalogue for now. Once more games exist, this can move to
 // GET /api/games so it's server-driven instead of hardcoded here.
@@ -15,12 +16,12 @@ const GAMES = [
     status: "available",
   },
   {
-    slug: "wheel-spin",
-    name: "Wheel Spin",
-    description: "Spin the wheel for an instant multiplier.",
-    icon: CircleDot,
-    status: "coming_soon",
-  },
+  slug: "crash",
+  name: "Crash",
+  description: "Watch the multiplier climb — cash out before it crashes.",
+  icon: Rocket,
+  status: "available",
+},
 ];
 
 export default function DashboardPage() {
@@ -37,6 +38,11 @@ export default function DashboardPage() {
           </h1>
           <p className="mt-1 font-mono text-sm text-muted">Pick a game to start playing.</p>
         </div>
+
+        <div className="mt-6 max-w-xs">
+          <DailyBonusCard />
+        </div>
+        
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((game) => (

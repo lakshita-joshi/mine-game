@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema(
     coins: { type: Number, default: 1000 },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     isBanned: { type: Boolean, default: false },
+    lastDailyClaim: { type: Date, default: null },
+    dailyStreak: { type: Number, default: 0 },
+    referralCode: { type: String, unique: true, sparse: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
