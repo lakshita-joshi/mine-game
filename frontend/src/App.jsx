@@ -10,6 +10,8 @@ import RequireAdmin from "./components/admin/requireAdmin.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
 import CrashGamePage from "./pages/CrashGamePage.jsx";
+import TeenPattiTablePage from "./pages/TeenPattiTablePage.jsx";
+import TeenPattiLobbyPage from "./pages/TeenPattiLobbyPage.jsx";
 
 export default function App() {
   return (
@@ -19,14 +21,13 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route
-  path="/games/crash"
-  element={
-    <ProtectedRoute>
-      <CrashGamePage />
-    </ProtectedRoute>
-  }
-/>
-
+            path="/games/crash"
+            element={
+              <ProtectedRoute>
+                <CrashGamePage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -35,7 +36,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/games/mines"
             element={
@@ -45,26 +45,41 @@ export default function App() {
             }
           />
           <Route
-  path="/admin"
-  element={
-    <ProtectedRoute>
-      <RequireAdmin>
-        <AdminDashboardPage />
-      </RequireAdmin>
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/admin/users"
-  element={
-    <ProtectedRoute>
-      <RequireAdmin>
-        <AdminUsersPage />
-      </RequireAdmin>
-    </ProtectedRoute>
-  }
-/>
-
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <RequireAdmin>
+                  <AdminDashboardPage />
+                </RequireAdmin>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <RequireAdmin>
+                  <AdminUsersPage />
+                </RequireAdmin>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/teenpatti"
+            element={
+              <ProtectedRoute>
+                <TeenPattiLobbyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/teenpatti/:tableId"
+            element={
+              <ProtectedRoute>
+                <TeenPattiTablePage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

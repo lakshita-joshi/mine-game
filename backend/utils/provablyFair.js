@@ -75,3 +75,18 @@ export function verifyRound({ serverSeed, serverSeedHash, clientSeed, nonce, siz
   const indices = pickIndices({ serverSeed, clientSeed, nonce, size, count });
   return { hashMatches, indices };
 }
+/**
+ * Full Fisher-Yates shuffle of a deck-sized array using the same
+ * seeded-float source as pickIndices — reused rather than
+ * reimplemented. Returns ALL indices in shuffled order, not just
+ * the first N, since a card deal needs the whole deck ordered.
+ */
+export function shuffleDeck({ serverSeed, clientSeed, nonce, deckSize }) {
+  const floats = generateFloats(serverSeed, clientSeed, nonce, deckSize);
+  const indices = Array.from({ length: deckSize }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(floats[i] * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}

@@ -65,3 +65,10 @@ export const walletApi = {
   claimDaily: () => request("/api/wallet/claim-daily", { method: "POST" }),
   balance: () => request("/api/wallet/balance"),
 };
+
+export const tableApi = {
+  create: ({ tableName, minStake, maxSeats }) =>
+    request("/api/tables", { method: "POST", body: { tableName, minStake, maxSeats } }),
+  list: () => request("/api/tables"),
+  get: (id) => request(`/api/tables/${id}`),
+};

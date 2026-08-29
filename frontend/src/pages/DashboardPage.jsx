@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Gem, CircleDot, Lock, Rocket } from "lucide-react";
+import { Gem, CircleDot, Lock, Rocket, Spade, Users } from "lucide-react";
 import NavBar from "../components/layout/NavBar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import DailyBonusCard from "../components/dashboard/DailyBonusCard.jsx";
@@ -16,12 +16,19 @@ const GAMES = [
     status: "available",
   },
   {
-  slug: "crash",
-  name: "Crash",
-  description: "Watch the multiplier climb — cash out before it crashes.",
-  icon: Rocket,
-  status: "available",
-},
+    slug: "crash",
+    name: "Crash",
+    description: "Watch the multiplier climb — cash out before it crashes.",
+    icon: Rocket,
+    status: "available",
+  },
+  {
+    slug: "teenpatti",
+    name: "Teen Patti",
+    description: "Classic 3-card betting game — blind or seen, fold or showdown.",
+    icon: Users,
+    status: "available",
+  },
 ];
 
 export default function DashboardPage() {
