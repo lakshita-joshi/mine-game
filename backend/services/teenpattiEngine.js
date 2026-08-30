@@ -258,17 +258,20 @@ export async function leaveTable(tableId, userId) {
     }
   }
 
-  // Safe to physically remove now if no round is in progress —
-  // reindex everyone else's seatIndex to stay contiguous afterward.
   if (table.status !== "betting") {
     table.seats = table.seats.filter((s) => !s.leftTable);
     table.seats.forEach((s, i) => (s.seatIndex = i));
   }
 
-  await table.save();
+  try {
+    await table.save();
+  } catch (err) {
+    if (err.name === "VersionError") {
+      return null;
+    }
+    throw err;
+  }
 
-  // If the table is now empty, delete it outright rather than
-  // leaving a ghost entry the lobby query would otherwise still match.
   if (table.seats.length === 0) {
     await Table.findByIdAndDelete(tableId);
     return null;
