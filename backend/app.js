@@ -72,9 +72,13 @@ io.on("connection", (socket) => {
       userSockets.delete(socket.userId);
     }
     for (const tableId of socket.joinedTables ?? []) {
-      const table = await leaveTable(tableId, socket.userId);
-      if (table) {
-        io.to(`table:${tableId}`).emit("teenpatti:update", publicTableView(table));
+      try {
+        const table = await leaveTable(tableId, socket.userId);
+        if (table) {
+          io.to(`table:${tableId}`).emit("teenpatti:update", publicTableView(table));
+        }
+      } catch (err) {
+        console.error("leaveTable failed on disconnect:", err.message);
       }
     }
   });
@@ -116,13 +120,13 @@ io.on("connection", (socket) => {
     try {
       const table = await startRound(tableId);
       io.to(`table:${tableId}`).emit("teenpatti:round-started", {
+        status: table.status,
         roundNumber: table.roundNumber,
         serverSeedHash: table.serverSeedHash,
         currentTurnSeatIndex: table.currentTurnSeatIndex,
         pot: table.pot,
       });
       armTurnTimerIfBetting(tableId, table);
-      // Each player's own hand is sent privately, not broadcast to the room
       for (const seat of table.seats) {
         const targetSocketId = userSockets.get(seat.user.toString());
         if (targetSocketId) {
@@ -154,6 +158,8 @@ io.on("connection", (socket) => {
     try {
       const result = await requestShowdown(tableId, socket.userId);
       io.to(`table:${tableId}`).emit("teenpatti:showdown-result", result);
+      io.to(`table:${tableId}`).emit("teenpatti:update", publicTableView(result.table));
+      clearTurnTimeout(tableId); // round is over, no turn to time out anymore
     } catch (err) {
       const message = err.name === "VersionError"
         ? "Someone else acted first — please try again"
@@ -161,15 +167,17 @@ io.on("connection", (socket) => {
       socket.emit("teenpatti:error", { error: message });
     }
   });
-
   socket.on("teenpatti:leave", async ({ tableId }) => {
     socket.leave(`table:${tableId}`);
-    const table = await leaveTable(tableId, socket.userId);
-    if (table) {
-      io.to(`table:${tableId}`).emit("teenpatti:update", publicTableView(table));
+    try {
+      const table = await leaveTable(tableId, socket.userId);
+      if (table) {
+        io.to(`table:${tableId}`).emit("teenpatti:update", publicTableView(table));
+      }
+    } catch (err) {
+      console.error("teenpatti:leave failed:", err.message);
     }
   });
-
   socket.on("teenpatti:request-hand", async ({ tableId }) => {
     const table = await Table.findById(tableId).select("+seats.hand");
     const seat = table?.seats.find((s) => s.user.equals(socket.userId));

@@ -16,10 +16,10 @@ export default function PlayingCard({ card, hidden }) {
 
   return (
     <div className="flex h-20 w-14 flex-col items-center justify-center rounded-lg border border-glow bg-ice">
-      <span className={`font-mono text-lg font-bold ${isRed ? "text-breach" : "text-abyss"}`}>
-        {card.rank}
+      <span className={`font-mono text-lg font-bold ${isRed ? "text-sonar-deep" : "text-abyss"}`}>
+          {card.rank}
       </span>
-      <span className={`text-xl ${isRed ? "text-breach" : "text-abyss"}`}>
+      <span className={`text-xl ${isRed ? "text-sonar-deep" : "text-abyss"}`}>
         {SUIT_SYMBOLS[card.suit]}
       </span>
     </div>

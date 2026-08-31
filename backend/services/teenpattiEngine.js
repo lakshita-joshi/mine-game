@@ -201,14 +201,13 @@ async function resolveRoundByFold(table, winnerSeat) {
   table.pot = 0;
 }
 
-export async function requestShowdown(tableId, requesterId) {
+export async function requestShowdown(tableId) {
   const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
   const activeSeats = table.seats.filter((s) => s.isPlaying);
   if (activeSeats.length < 2) throw new Error("Showdown requires at least 2 active players");
 
   let winner = activeSeats[0];
   let winnerHand = evaluateHand(winner.hand);
-
   for (const seat of activeSeats.slice(1)) {
     const hand = evaluateHand(seat.hand);
     if (compareHands(hand, winnerHand) > 0) {
@@ -223,11 +222,11 @@ export async function requestShowdown(tableId, requesterId) {
   table.pot = 0;
   await table.save();
 
-  // Server seed disclosed now — same provably-fair reveal pattern as Mines/Crash
   return {
     winnerId: winner.user,
     serverSeed: table.serverSeed,
     hands: table.seats.map((s) => ({ userId: s.user, hand: s.isPlaying ? s.hand : null })),
+    table, // <- added
   };
 }
 /**

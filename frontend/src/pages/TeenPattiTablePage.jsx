@@ -165,6 +165,9 @@ export default function TeenPattiTablePage() {
         {showdownResult && (
           <div className="mt-4 rounded-2xl border border-sonar bg-sonar/10 p-5">
             <p className="font-display text-sm font-bold uppercase text-sonar">Showdown</p>
+            <p className="mt-1 font-mono text-xs text-ice">
+              Winner: {showdownResult.winnerId === user?._id ? "You" : `Player ${showdownResult.winnerId.slice(-6)}`}
+            </p>
             <div className="mt-3 flex flex-wrap gap-4">
               {showdownResult.hands.map((h) => (
                 <div key={h.userId}>
