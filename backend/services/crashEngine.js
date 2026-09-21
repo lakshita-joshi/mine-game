@@ -86,7 +86,7 @@ export async function placeBet(userId, stake) {
   if (current.status !== "betting") throw new Error("Betting is closed for this round");
   if (current.bets.has(userId)) throw new Error("You already placed a bet this round");
 
-  await deductStake(userId, stake); // throws InsufficientFundsError if not enough
+  const newBalance = await deductStake(userId, stake);
 
   const session = await GameSession.create({
     user: userId,
@@ -100,7 +100,7 @@ export async function placeBet(userId, stake) {
   });
 
   current.bets.set(userId, { sessionId: session._id, stake, cashedOut: false });
-  return { sessionId: session._id, roundId: current.roundId };
+  return { sessionId: session._id, roundId: current.roundId, newBalance };
 }
 
 export async function cashOut(userId) {

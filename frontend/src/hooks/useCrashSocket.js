@@ -45,7 +45,10 @@ export function useCrashSocket(onBalanceChange) {
       setCrashResult({ crashPoint, serverSeed });
     });
 
-    socket.on("crash:bet:ok", (result) => setMyBet(result));
+    socket.on("crash:bet:ok", (result) => {
+      setMyBet(result);
+      onBalanceChange?.(result.newBalance);
+    });
     socket.on("crash:bet:error", ({ error }) => setError(error));
 socket.on("crash:cashout:ok", (result) => {
   setMyCashout(result);

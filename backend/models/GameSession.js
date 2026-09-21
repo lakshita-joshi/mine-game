@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const gameSessionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    gameType: { type: String, required: true, enum: ["mines", "crash"] },
+    gameType: { type: String, required: true, enum: ["mines", "crash", "dragontiger", "teenpatti"] },
     stake: { type: Number, required: true },
     status: {
       type: String,

@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { GRID_SIZE, payoutMultiplier, START_BALANCE } from "../utils/gameMath.js";
-import { mockMinePositions } from "../utils/mockRng.js";
 
 /**
  * Owns all Mines game state. Currently runs entirely client-side

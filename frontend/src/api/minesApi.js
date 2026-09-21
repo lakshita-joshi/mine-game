@@ -72,3 +72,8 @@ export const tableApi = {
   list: () => request("/api/tables"),
   get: (id) => request(`/api/tables/${id}`),
 };
+
+export const dragonTigerApi = {
+  play: ({ dragon, tiger, tie, clientSeed }) =>
+    request("/api/dragontiger/play", { method: "POST", body: { dragon, tiger, tie, clientSeed } }),
+};

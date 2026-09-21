@@ -73,6 +73,9 @@ export function useTeenPattiSocket(tableId) {
     },
     [tableId]
   );
+  const leaveTable = useCallback(() => {
+    socketRef.current?.emit("teenpatti:leave", { tableId });
+  }, [tableId]);
 
-  return { connected, table, myHand, showdownResult, error, startRound, bet, requestShowdown, requestSideShow, respondToSideShow };
+  return { leaveTable, connected, table, myHand, showdownResult, error, startRound, bet, requestShowdown, requestSideShow, respondToSideShow };
 }

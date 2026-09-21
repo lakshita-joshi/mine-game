@@ -11,12 +11,13 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { authenticateSocket } from "./utils/socketAuth.js";
 import { initCrashEngine, placeBet, cashOut } from "./services/crashEngine.js";
-import { joinTable, startRound, placeBet as placeTeenPattiBet, requestShowdown } from "./services/teenpattiEngine.js";
+import { joinTable, startRound, placeBet as placeTeenPattiBet, requestShowdown, autoFoldCurrentPlayer, requestSideShow, resolveSideShow, leaveTable } from "./services/teenpattiEngine.js";
 import Table from "./models/Table.js";
 import tableRoutes from "./routes/tableRoutes.js";
-import { autoFoldCurrentPlayer, requestSideShow, resolveSideShow, leaveTable } from "./services/teenpattiEngine.js";
 import { scheduleTurnTimeout, clearTurnTimeout } from "./utils/turnTimers.js";
-
+import dragonTigerRoutes from "./routes/dragontigerRoutes.js";
+import { exec } from "child_process";
+import { cleanupStaleTables } from "./scripts/cleanupTables.js";
 const app = express();
 
 app.use(express.json());
@@ -42,6 +43,7 @@ app.use("/api/mines", minesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/tables", tableRoutes);
+app.use("/api/dragontiger", dragonTigerRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

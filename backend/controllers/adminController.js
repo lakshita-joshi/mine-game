@@ -77,13 +77,17 @@ export async function updateUser(req, res) {
 export async function getStats(req, res) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [totalUsers, newUsersLast7d, totalSessions, activeSessions, wagerAgg] = await Promise.all([
+  const [totalUsers, newUsersLast7d, totalSessions, activeSessions, wagerAgg, byGameType] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
     GameSession.countDocuments(),
     GameSession.countDocuments({ status: "active" }),
     GameSession.aggregate([
       { $group: { _id: null, totalStaked: { $sum: "$stake" }, totalPayout: { $sum: "$payout" } } },
+    ]),
+    GameSession.aggregate([
+      { $group: { _id: "$gameType", totalStaked: { $sum: "$stake" }, totalPayout: { $sum: "$payout" }, rounds: { $sum: 1 } } },
+      { $sort: { totalStaked: -1 } },
     ]),
   ]);
 
@@ -98,6 +102,13 @@ export async function getStats(req, res) {
     totalStaked,
     totalPayout,
     houseProfit: totalStaked - totalPayout,
+    byGameType: byGameType.map((g) => ({
+      gameType: g._id,
+      totalStaked: g.totalStaked,
+      totalPayout: g.totalPayout,
+      houseProfit: g.totalStaked - g.totalPayout,
+      rounds: g.rounds,
+    })),
   });
 }
 

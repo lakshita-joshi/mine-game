@@ -5,8 +5,6 @@ import { evaluateHand, compareHands } from "../utils/teenPattiLogic.js";
 import { deductStake, creditPayout } from "./walletService.js";
 import { getBalance } from "./walletService.js";
 
-const BOOT_AMOUNT_MULTIPLIER = 1; // initial forced bet = minStake
-
 export async function joinTable(tableId, userId) {
   const table = await Table.findById(tableId);
   if (!table) throw new Error("Table not found");

@@ -86,6 +86,34 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="mt-8">
+                <h2 className="font-mono text-xs uppercase tracking-wide text-muted">By game</h2>
+                <div className="mt-3 overflow-x-auto rounded-2xl border border-panel-border bg-panel">
+                  <table className="w-full text-left font-mono text-xs">
+                    <thead>
+                      <tr className="border-b border-panel-border text-muted">
+                        <th className="px-4 py-3 font-medium">Game</th>
+                        <th className="px-4 py-3 font-medium">Rounds</th>
+                        <th className="px-4 py-3 font-medium">Staked</th>
+                        <th className="px-4 py-3 font-medium">Paid out</th>
+                        <th className="px-4 py-3 font-medium">House profit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.byGameType.map((g) => (
+                        <tr key={g.gameType} className="border-b border-panel-border last:border-0">
+                          <td className="px-4 py-3 capitalize text-ice">{g.gameType}</td>
+                          <td className="px-4 py-3 text-muted">{g.rounds}</td>
+                          <td className="px-4 py-3 text-ice">{g.totalStaked.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-ice">{g.totalPayout.toLocaleString()}</td>
+                          <td className="px-4 py-3 font-semibold text-sonar">{g.houseProfit.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="mt-8">
                 <h2 className="font-mono text-xs uppercase tracking-wide text-muted">
                   Recent sessions
                 </h2>

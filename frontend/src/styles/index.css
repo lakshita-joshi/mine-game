@@ -2,18 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #060b16;
+@layer base {
+  body {
+    background: #080b12;
+    color: #f0f4ff;
+    font-family: 'Inter', 'Space Grotesk', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-/* Ambient sonar sweep behind the grid — signature motion element */
+@layer utilities {
+  /* ── Glassmorphism ───────────────────────────────────────────────────── */
+  .glass {
+    background: rgba(13, 17, 23, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .glass-heavy {
+    background: rgba(8, 11, 18, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* ── Glow shadows ────────────────────────────────────────────────────── */
+  .glow-gold    { box-shadow: 0 0 24px rgba(245,200,66,0.18), 0 0 60px rgba(245,200,66,0.05); }
+  .glow-gold-sm { box-shadow: 0 0 10px rgba(245,200,66,0.15); }
+  .glow-win     { box-shadow: 0 0 20px rgba(34,197,94,0.22); }
+  .glow-loss    { box-shadow: 0 0 20px rgba(239,68,68,0.22); }
+
+  /* ── Shimmer skeleton ───────────────────────────────────────────────── */
+  .shimmer-bg {
+    background: linear-gradient(90deg, #131920 0%, #1a2332 40%, #131920 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+/* ── Sonar / ambient sweep (game backgrounds) ───────────────────────── */
 .sonar-sweep {
   position: absolute;
   inset: -20%;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(47, 143, 255, 0.08) 40deg,
+    rgba(245,200,66,0.06) 40deg,
     transparent 90deg,
     transparent 360deg
   );
@@ -21,16 +54,31 @@ body {
   pointer-events: none;
 }
 
-@keyframes sweepRotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.gold-sweep {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(245,200,66,0.08) 40deg,
+    transparent 90deg,
+    transparent 360deg
+  );
+  animation: sweepRotate 6s linear infinite;
+  pointer-events: none;
 }
 
-/* 3D tile flip reveal */
+@keyframes sweepRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── 3-D tile flip (Mines game) ─────────────────────────────────────── */
 .tile-flip {
   background: transparent;
   padding: 0;
@@ -41,7 +89,7 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
   perspective: 600px;
 }
@@ -57,34 +105,50 @@ body {
   transform: rotateY(180deg);
 }
 
-/* Range slider thumb */
+/* ── Gold range slider ──────────────────────────────────────────────── */
 input[type="range"] {
   height: 4px;
   border-radius: 2px;
-  background: #22456c;
+  background: #1E2D42;
   -webkit-appearance: none;
+  cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #2f8fff;
+  background: linear-gradient(135deg, #F5C842, #C49A10);
   cursor: pointer;
-  border: 2px solid #eaf3ff;
+  border: 2px solid #080B12;
+  box-shadow: 0 0 8px rgba(245,200,66,0.4);
 }
 
+input[type="range"]:disabled::-webkit-slider-thumb {
+  background: #1E2D42;
+  box-shadow: none;
+}
+
+/* ── Remove number spinners ─────────────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
+/* ── Custom scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0D1117; }
+::-webkit-scrollbar-thumb { background: #1E2D42; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2A3F5C; }
+
+/* ── Reduced motion ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .radar-pulse,
   .sonar-sweep,
-  .tile-inner {
+  .gold-sweep,
+  .tile-inner,
+  .shimmer-bg {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }

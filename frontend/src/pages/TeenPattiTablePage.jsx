@@ -1,193 +1,248 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import { Users, Eye, Flag, Trophy } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Users, Eye, Flag, Trophy, LogOut } from "lucide-react";
 import NavBar from "../components/layout/NavBar.jsx";
+import BottomNav from "../components/layout/BottomNav.jsx";
 import PlayingCard from "../components/teenpatti/PlayingCard.jsx";
 import { useTeenPattiSocket } from "../hooks/useTeenPattiSocket.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function TeenPattiTablePage() {
-  const { tableId } = useParams();
-  const { user } = useAuth();
+  const { tableId }  = useParams();
+  const { user, setCoins } = useAuth(); // ← BUG FIX: setCoins was missing
+  const navigate = useNavigate();
   const [hasSeenHand, setHasSeenHand] = useState(false);
-  const { connected, table, myHand, showdownResult, error, startRound, bet, requestShowdown, sideShowIncoming, requestSideShow, respondToSideShow } =
-  useTeenPattiSocket(tableId);
+  const [sideShowAmount, setSideShowAmount] = useState(10);
 
-  const mySeatIndex = table?.seats?.findIndex((s) => s.user === user?._id) ?? -1;
-  const isMyTurn = table?.currentTurnSeatIndex === mySeatIndex;
-  const activeCount = table?.seats?.filter((s) => s.isPlaying).length ?? 0;
+  const {
+    connected, table, myHand, showdownResult, error,
+    startRound, bet, requestShowdown,
+    sideShowIncoming, requestSideShow, respondToSideShow,
+    leaveTable,
+  } = useTeenPattiSocket(tableId, setCoins);
 
-  function handleSeeHand() {
-    setHasSeenHand(true);
+  const mySeatIndex   = table?.seats?.findIndex((s) => s.user === user?._id) ?? -1;
+  const isMyTurn      = table?.currentTurnSeatIndex === mySeatIndex;
+  const myStake       = table?.seats?.[mySeatIndex]?.currentStake ?? 0;
+  const activeCount   = table?.seats?.filter((s) => s.isPlaying).length ?? 0;
+  const isHost        = table?.seats?.[0]?.user === user?._id;
+  const canStart      = isHost && table?.phase === "waiting" && activeCount >= 2;
+
+  function handleLeave() {
+    leaveTable();
+    navigate("/games/teenpatti");
   }
 
   return (
-    <div className="min-h-screen w-full bg-abyss p-4 text-ice sm:p-8">
-      <div className="mx-auto max-w-3xl">
-        <NavBar />
+    <div className="min-h-screen w-full bg-void pb-20 sm:pb-0">
+      <NavBar />
 
-        <div className="mt-6 rounded-2xl border border-panel-border bg-panel p-6">
-          <div className="flex items-center justify-between">
-            <h1 className="flex items-center gap-2 font-display text-xl font-bold text-ice">
-              <Users size={20} className="text-sonar" />
-              Table {tableId?.slice(-6)}
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-lg font-bold text-chalk">
+              🃏 Table{" "}
+              <span className="font-mono text-gold">#{tableId?.slice(-6)}</span>
             </h1>
-            <span className="font-mono text-xs text-muted">
-              {connected ? `${table?.seats?.length ?? 0} seated` : "connecting…"}
-            </span>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between rounded-xl border border-tile-idle-border bg-abyss-edge px-4 py-3">
-            <span className="font-mono text-xs uppercase tracking-wide text-muted">Pot</span>
-            <span className="font-mono text-2xl font-bold text-sonar">{table?.pot ?? 0}</span>
-          </div>
-
-          {error && (
-            <p className="mt-3 rounded-lg border border-breach bg-[#0A1626] px-3 py-2 font-mono text-xs text-breach">
-              {error}
+            <p className="mt-0.5 font-mono text-xs text-fog">
+              {connected ? `${table?.seats?.length ?? 0} players seated` : "Connecting…"}
             </p>
-          )}
+          </div>
+          <button
+            onClick={handleLeave}
+            className="flex items-center gap-1.5 rounded-xl border border-rim bg-elevated px-3 py-2 font-mono text-xs text-silver transition-colors hover:border-loss/30 hover:text-loss"
+          >
+            <LogOut size={13} />
+            Leave
+          </button>
+        </div>
 
-          {/* Seats */}
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {table?.seats?.map((seat) => (
+        {/* Error */}
+        {error && (
+          <div className="mb-4 rounded-xl border border-loss/30 bg-loss/5 px-4 py-2.5">
+            <p className="font-mono text-xs text-loss">{error}</p>
+          </div>
+        )}
+
+        {/* Pot display */}
+        <div className="mb-5 flex items-center justify-between rounded-2xl border border-gold/20 bg-gold/5 px-5 py-4">
+          <span className="font-mono text-xs uppercase tracking-wider text-fog">Pot</span>
+          <span className="font-mono text-3xl font-bold text-gold">
+            {(table?.pot ?? 0).toLocaleString()}
+          </span>
+        </div>
+
+        {/* Seats grid */}
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {table?.seats?.map((seat) => {
+            const isMe      = seat.user === user?._id;
+            const isTurn    = table.currentTurnSeatIndex === seat.seatIndex;
+            return (
               <div
                 key={seat.seatIndex}
-                className={`rounded-xl border p-3 text-center ${
-                  table.currentTurnSeatIndex === seat.seatIndex
-                    ? "border-sonar bg-sonar/10"
-                    : "border-panel-border"
-                } ${!seat.isPlaying ? "opacity-40" : ""}`}
+                className={[
+                  "rounded-2xl border p-4 text-center transition-all",
+                  isTurn    ? "border-gold/40 bg-gold/6 shadow-[0_0_12px_rgba(245,200,66,0.12)]" : "border-rim bg-elevated",
+                  !seat.isPlaying ? "opacity-40" : "",
+                ].join(" ")}
               >
-                <p className="font-mono text-xs text-ice">
-                  {seat.user === user?._id ? "You" : `Seat ${seat.seatIndex + 1}`}
+                <div
+                  className={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full font-display text-sm font-bold ${
+                    isMe ? "bg-gold text-void" : "bg-raised text-silver"
+                  }`}
+                >
+                  {isMe ? "Y" : seat.seatIndex + 1}
+                </div>
+                <p className={`font-mono text-xs ${isMe ? "text-gold" : "text-chalk"}`}>
+                  {isMe ? "You" : `Seat ${seat.seatIndex + 1}`}
                 </p>
-                <p className="mt-1 font-mono text-[11px] text-muted">
+                <p className="mt-0.5 font-mono text-[11px] text-fog">
                   {seat.isPlaying ? `${seat.currentStake} in` : "folded"}
                 </p>
               </div>
-            ))}
-            </div>
-
-            {/* My hand */}
-            {myHand && (
-                <div className="mt-6">
-                <p className="mb-2 font-mono text-xs uppercase tracking-wide text-muted">Your hand</p>
-                <div className="flex gap-2">
-                    {myHand.map((card, i) => (
-                    <PlayingCard key={i} card={card} hidden={!hasSeenHand} />
-                    ))}
-                </div>
-                {!hasSeenHand && (
-                    <button
-                    onClick={handleSeeHand}
-                    className="mt-3 flex items-center gap-1.5 rounded-full border border-panel-border px-3 py-1.5 font-mono text-xs text-muted hover:border-sonar hover:text-ice"
-                    >
-                    <Eye size={14} />
-                    Look at my cards (doubles next bet)
-                    </button>
-                )}
-                </div>
-            )}
-
-            {/* Controls */}
-            <div className="mt-6 flex flex-wrap gap-2">
-                {table?.status === "waiting" || table?.status === "finished" ? (
-                <button
-                    onClick={startRound}
-                    className="rounded-xl bg-gradient-to-b from-sonar to-sonar-deep px-5 py-2.5 font-display text-sm font-semibold uppercase text-[#03101F]"
-                >
-                    Start round
-                </button>
-                ) : (
-                <>
-                    <button
-                    onClick={() => bet("bet", hasSeenHand)}
-                    disabled={!isMyTurn}
-                    className="rounded-xl bg-gradient-to-b from-sonar to-sonar-deep px-5 py-2.5 font-display text-sm font-semibold uppercase text-[#03101F] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                    {hasSeenHand ? "Bet (seen)" : "Bet (blind)"}
-                    </button>
-                    <button
-                    onClick={() => bet("fold")}
-                    disabled={!isMyTurn}
-                    className="flex items-center gap-1.5 rounded-xl border border-breach px-5 py-2.5 font-display text-sm font-semibold uppercase text-breach disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                    <Flag size={14} />
-                    Fold
-                    </button>
-                    {activeCount === 2 && (
-                    <button
-                        onClick={requestShowdown}
-                        className="flex items-center gap-1.5 rounded-xl border border-ice px-5 py-2.5 font-display text-sm font-semibold uppercase text-ice"
-                    >
-                        <Trophy size={14} />
-                        Showdown
-                    </button>
-                    )}
-                    {hasSeenHand && activeCount > 2 && (
-                        <button
-                            onClick={requestSideShow}
-                            className="rounded-xl border border-glow px-5 py-2.5 font-display text-sm font-semibold uppercase text-glow"
-                        >
-                            Side-show
-                        </button>
-                    )}
-                </>
-                )}
-            </div>
-
-            {!isMyTurn && table?.status === "betting" && (
-                <p className="mt-3 font-mono text-xs text-muted-dim">Waiting for another player's turn…</p>
-            )}
-
-            {sideShowIncoming && (
-            <div className="mt-4 rounded-xl border border-sonar bg-sonar/10 p-4">
-                <p className="font-mono text-sm text-ice">A player wants to compare hands with you.</p>
-                <div className="mt-2 flex gap-2">
-                <button
-                    onClick={() => respondToSideShow(sideShowIncoming.requesterId, true)}
-                    className="rounded-full bg-sonar px-4 py-1.5 font-mono text-xs font-semibold text-[#03101F]"
-                >
-                    Accept
-                </button>
-                <button
-                    onClick={() => respondToSideShow(sideShowIncoming.requesterId, false)}
-                    className="rounded-full border border-panel-border px-4 py-1.5 font-mono text-xs text-muted"
-                >
-                    Decline
-                </button>
-                </div>
-            </div>
-            )}
+            );
+          })}
         </div>
 
-        {showdownResult && (
-          <div className="mt-4 rounded-2xl border border-sonar bg-sonar/10 p-5">
-            <p className="font-display text-sm font-bold uppercase text-sonar">Showdown</p>
-            <p className="mt-1 font-mono text-xs text-ice">
-              Winner: {showdownResult.winnerId === user?._id ? "You" : `Player ${showdownResult.winnerId.slice(-6)}`}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-4">
-              {showdownResult.hands.map((h) => (
-                <div key={h.userId}>
-                  <p className="mb-1 font-mono text-[11px] text-muted">
-                    {h.userId === user?._id ? "You" : h.userId.slice(-6)}
-                  </p>
-                  <div className="flex gap-1">
-                    {h.hand ? h.hand.map((c, i) => <PlayingCard key={i} card={c} />) : (
-                      <p className="font-mono text-xs text-muted-dim">folded</p>
-                    )}
-                  </div>
-                </div>
+        {/* My hand */}
+        {myHand?.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-rim bg-elevated p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-sm font-semibold text-chalk">Your Hand</h2>
+              {!hasSeenHand && (
+                <button
+                  onClick={() => setHasSeenHand(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-rim px-3 py-1.5 font-mono text-xs text-silver transition-colors hover:border-gold/30 hover:text-gold"
+                >
+                  <Eye size={12} />
+                  See cards
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {myHand.map((card, i) => (
+                <PlayingCard key={i} card={card} hidden={!hasSeenHand} />
               ))}
             </div>
-            <p className="mt-3 font-mono text-[11px] text-muted-dim">
-              Server seed revealed: {showdownResult.serverSeed.slice(0, 16)}…
-            </p>
           </div>
         )}
-      </div>
+
+        {/* Showdown result */}
+        {showdownResult && (
+          <div className="mb-5 rounded-2xl border border-gold/30 bg-gold/6 p-5 text-center">
+            <Trophy size={24} className="mx-auto mb-2 text-gold" />
+            <p className="font-display text-xl font-bold text-gold">
+              {showdownResult.winner === user?._id ? "You won!" : "You lost!"}
+            </p>
+            {showdownResult.hands?.map((h, i) => (
+              <div key={i} className="mt-3 flex items-center justify-center gap-2">
+                {h.cards?.map((c, j) => <PlayingCard key={j} card={c} hidden={false} />)}
+                <span className="font-mono text-xs text-fog">{h.handName}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Side-show incoming */}
+        {sideShowIncoming && (
+          <div className="mb-5 rounded-2xl border border-info/30 bg-info/6 p-5">
+            <p className="font-display text-base font-semibold text-chalk">
+              Side show requested!
+            </p>
+            <p className="mt-0.5 font-mono text-xs text-fog">
+              A player wants to compare hands privately.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => respondToSideShow(true)}
+                className="rounded-xl bg-win px-5 py-2.5 font-display text-sm font-semibold text-void"
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => respondToSideShow(false)}
+                className="rounded-xl border border-rim bg-elevated px-5 py-2.5 font-display text-sm font-semibold text-chalk"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action panel */}
+        <div className="rounded-2xl border border-rim bg-elevated p-5">
+          <h2 className="mb-4 font-display text-base font-semibold text-chalk">Actions</h2>
+
+          {/* Start round */}
+          {canStart && (
+            <button
+              onClick={startRound}
+              className="mb-3 w-full rounded-xl bg-gradient-to-r from-gold to-gold-deep py-3.5 font-display text-sm font-semibold uppercase tracking-wide text-void shadow-[0_0_16px_rgba(245,200,66,0.25)] transition-all hover:shadow-[0_0_26px_rgba(245,200,66,0.42)] active:scale-[0.97]"
+            >
+              Start Round
+            </button>
+          )}
+
+          {/* Betting actions (only on your turn) */}
+          {isMyTurn && table?.phase === "betting" && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => bet(myStake, false)}
+                className="rounded-xl border border-rim bg-raised px-5 py-2.5 font-display text-sm font-semibold text-chalk transition-all hover:border-rim-bright active:scale-[0.97]"
+              >
+                Chaal
+                <span className="ml-1 font-mono text-xs text-fog">
+                  ({myStake > 0 ? myStake * (hasSeenHand ? 2 : 1) : table?.minStake})
+                </span>
+              </button>
+              <button
+                onClick={() => bet(0, true)}
+                className="rounded-xl border border-loss/30 bg-loss/8 px-5 py-2.5 font-display text-sm font-semibold text-loss transition-all hover:bg-loss/15 active:scale-[0.97]"
+              >
+                <Flag size={13} className="inline mr-1" />
+                Fold
+              </button>
+              <button
+                onClick={requestShowdown}
+                className="rounded-xl border border-gold/30 bg-gold/8 px-5 py-2.5 font-display text-sm font-semibold text-gold transition-all hover:bg-gold/15 active:scale-[0.97]"
+              >
+                <Trophy size={13} className="inline mr-1" />
+                Show
+              </button>
+              {!hasSeenHand && (
+                <button
+                  onClick={() => setHasSeenHand(true)}
+                  className="rounded-xl border border-rim bg-raised px-5 py-2.5 font-display text-sm font-semibold text-silver transition-all hover:border-rim-bright hover:text-chalk active:scale-[0.97]"
+                >
+                  <Eye size={13} className="inline mr-1" />
+                  See Hand
+                </button>
+              )}
+              {hasSeenHand && activeCount === 2 && (
+                <button
+                  onClick={() => requestSideShow(sideShowAmount)}
+                  className="rounded-xl border border-info/30 bg-info/8 px-5 py-2.5 font-display text-sm font-semibold text-info transition-all hover:bg-info/15 active:scale-[0.97]"
+                >
+                  Sideshow
+                </button>
+              )}
+            </div>
+          )}
+
+          {!isMyTurn && table?.phase === "betting" && (
+            <p className="font-mono text-sm text-fog">Waiting for another player's turn…</p>
+          )}
+
+          {table?.phase === "waiting" && !canStart && (
+            <p className="font-mono text-sm text-fog">
+              {activeCount < 2 ? "Waiting for more players to join…" : "Waiting for host to start…"}
+            </p>
+          )}
+        </div>
+      </main>
+
+      <BottomNav />
     </div>
   );
 }
