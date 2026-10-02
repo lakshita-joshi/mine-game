@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Coins, LogOut, ShieldCheck, Menu, X, Zap } from "lucide-react";
+import { Crown, Coins, LogOut, ShieldCheck, Menu, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const NAV_LINKS = [
@@ -61,15 +61,6 @@ export default function NavBar({ backLink }) {
             </span>
           </div>
 
-          {/* Deposit CTA */}
-          <Link
-            to="/wallet"
-            className="hidden items-center gap-1.5 rounded-xl bg-gradient-to-r from-gold to-gold-deep px-4 py-2 font-display text-sm font-semibold text-void shadow-[0_0_12px_rgba(245,200,66,0.2)] transition-all hover:shadow-[0_0_20px_rgba(245,200,66,0.38)] sm:flex"
-          >
-            <Zap size={14} />
-            Deposit
-          </Link>
-
           {/* Admin link */}
           {user?.role === "admin" && (
             <Link
@@ -114,21 +105,12 @@ export default function NavBar({ backLink }) {
       {/* ── Mobile menu ───────────────────────────────────────────────── */}
       {mobileOpen && (
         <div className="animate-slide-down border-t border-rim bg-base px-4 py-3 sm:hidden">
-          {/* Mobile balance + deposit */}
-          <div className="mb-3 flex items-center justify-between rounded-xl border border-gold/25 bg-gold/5 px-4 py-2.5">
-            <div className="flex items-center gap-2">
-              <Coins size={14} className="text-gold" />
-              <span className="font-mono text-sm font-semibold text-gold">
-                {(user?.coins ?? 0).toLocaleString()}
-              </span>
-            </div>
-            <Link
-              to="/wallet"
-              onClick={() => setMobileOpen(false)}
-              className="rounded-lg bg-gold px-3 py-1 font-display text-xs font-semibold text-void"
-            >
-              Deposit
-            </Link>
+          {/* Mobile balance */}
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/5 px-4 py-2.5">
+            <Coins size={14} className="text-gold" />
+            <span className="font-mono text-sm font-semibold text-gold">
+              {(user?.coins ?? 0).toLocaleString()}
+            </span>
           </div>
 
           <nav className="flex flex-col gap-1">

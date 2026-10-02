@@ -1,7 +1,7 @@
 import React from "react";
 import NavBar from "../components/layout/NavBar.jsx";
 import BottomNav from "../components/layout/BottomNav.jsx";
-import { Wallet, ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import Skeleton from "../components/ui/Skeleton.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -23,24 +23,6 @@ export default function WalletPage() {
             {(user?.coins ?? 0).toLocaleString()}
           </p>
           <p className="mt-0.5 font-mono text-xs text-fog">coins</p>
-
-          <div className="mt-6 flex gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold to-gold-deep px-5 py-2.5 font-display text-sm font-semibold text-void">
-              <ArrowDownLeft size={15} />
-              Deposit
-            </button>
-            <button className="flex items-center gap-2 rounded-xl border border-rim-bright bg-raised px-5 py-2.5 font-display text-sm font-semibold text-chalk">
-              <ArrowUpRight size={15} />
-              Withdraw
-            </button>
-          </div>
-        </div>
-
-        {/* Coming soon notice */}
-        <div className="mb-5 rounded-xl border border-gold/15 bg-gold/5 px-4 py-3">
-          <p className="font-mono text-xs text-gold">
-            🔧 Real deposits & withdrawals coming soon. Play with virtual coins for now!
-          </p>
         </div>
 
         {/* Transaction history skeleton */}
