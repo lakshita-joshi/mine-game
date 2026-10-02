@@ -52,28 +52,6 @@ const GAMES = [
     available: true,
     tags: ["teenpatti"],
   },
-  {
-    slug: "slots",
-    name: "Slots",
-    description: "Spin the reels and hit the jackpot.",
-    emoji: "🎰",
-    category: "Slots",
-    badge: null,
-    players: null,
-    available: false,
-    tags: ["slots"],
-  },
-  {
-    slug: "roulette",
-    name: "Roulette",
-    description: "Place your bets, spin the wheel.",
-    emoji: "🎡",
-    category: "Table",
-    badge: null,
-    players: null,
-    available: false,
-    tags: ["roulette"],
-  },
 ];
 
 export default function DashboardPage() {

@@ -22,24 +22,6 @@ const PROMOS = [
     cta: "Claim",
     expiry: "Daily",
   },
-  {
-    emoji: "🏆",
-    title: "Weekend Tournament",
-    desc: "Compete in the weekend crash tournament for top prizes.",
-    badge: { variant: "coming", label: "Soon" },
-    eligible: false,
-    cta: "Remind me",
-    expiry: "Coming soon",
-  },
-  {
-    emoji: "💎",
-    title: "VIP Rakeback",
-    desc: "High-volume players earn a percentage of every bet back.",
-    badge: { variant: "coming", label: "Soon" },
-    eligible: false,
-    cta: "Learn more",
-    expiry: "Coming soon",
-  },
 ];
 
 export default function PromotionsPage() {

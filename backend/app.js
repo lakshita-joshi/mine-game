@@ -18,6 +18,8 @@ import { scheduleTurnTimeout, clearTurnTimeout } from "./utils/turnTimers.js";
 import dragonTigerRoutes from "./routes/dragontigerRoutes.js";
 import { exec } from "child_process";
 import { cleanupStaleTables } from "./scripts/cleanupTables.js";
+import leaderboardRoutes from "./routes/leaderboardRoutes.js";
+
 const app = express();
 
 app.use(express.json());
@@ -44,6 +46,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/dragontiger", dragonTigerRoutes);
+app.use("/api", leaderboardRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

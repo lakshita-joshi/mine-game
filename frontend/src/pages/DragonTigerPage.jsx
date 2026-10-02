@@ -31,7 +31,8 @@ export default function DragonTigerPage() {
     setPhase("dealing");
     setResult(null);
     try {
-      const data = await dragonTigerApi.deal(betAmounts);
+      const clientSeed = Math.random().toString(36).slice(2);
+      const data = await dragonTigerApi.play({ ...betAmounts, clientSeed });
       setResult(data);
       if (data.newBalance !== undefined) setCoins(data.newBalance);
       setPhase("result");
@@ -65,31 +66,7 @@ export default function DragonTigerPage() {
         {/* Card table */}
         <div className="relative overflow-hidden rounded-2xl border border-rim bg-elevated">
           {/* Felt gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1A10]/60 via-[#0D1117] to-[#0A100A]/60" />
-
-          {/* Result overlay */}
-          {phase === "result" && outcome && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-void/75 backdrop-blur-sm">
-              <div className="text-center">
-                <p className={`font-display text-3xl font-bold ${outcome.color}`}>
-                  {outcome.label}
-                </p>
-                {result.payout > 0 ? (
-                  <p className="mt-2 font-mono text-xl font-bold text-win">
-                    +{result.payout.toLocaleString()} coins!
-                  </p>
-                ) : (
-                  <p className="mt-2 font-mono text-base text-fog">Better luck next time</p>
-                )}
-                <button
-                  onClick={handlePlayAgain}
-                  className="mt-5 rounded-xl border border-rim bg-elevated px-6 py-2.5 font-display text-sm font-semibold text-chalk transition-all hover:border-gold/30 hover:text-gold"
-                >
-                  Play Again
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1A10]/60 via-[#0D1117] to-[#0A100A]/60" />       
 
           {/* Cards area */}
           <div className="relative flex flex-col items-center gap-8 py-10 sm:flex-row sm:justify-center sm:gap-20">
@@ -177,6 +154,29 @@ export default function DragonTigerPage() {
       </main>
 
       <BottomNav />
+      {/* Result panel — shown at the bottom after a deal resolves */}
+        {phase === "result" && outcome && (
+          <div className="mt-5 rounded-2xl border border-rim bg-elevated p-6 text-center">
+            <p className={`font-display text-3xl font-bold ${outcome.color}`}>
+              {outcome.label}
+            </p>
+            {result.payout > 0 ? (
+              <p className="mt-2 font-mono text-xl font-bold text-win">
+                +{result.payout.toLocaleString()} coins!
+              </p>
+            ) : (
+              <p className="mt-2 font-mono text-base text-fog">Better luck next time</p>
+            )}
+            <button
+              onClick={handlePlayAgain}
+              className="mt-5 rounded-xl border border-rim bg-elevated px-6 py-2.5 font-display text-sm font-semibold text-chalk transition-all hover:border-gold/30 hover:text-gold"
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+
+        <BottomNav />
     </div>
   );
 }

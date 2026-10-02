@@ -1,39 +1,30 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { GRID_SIZE, payoutMultiplier, START_BALANCE } from "../utils/gameMath.js";
+import { mockMinePositions } from "../utils/mockRng.js";
 
 /**
- * Owns all Mines game state. Currently runs entirely client-side
- * against mockMinePositions() for local demo purposes — the coin
- * balance here is a LOCAL COPY seeded from the authenticated user's
- * real balance, not synced back to the server on every move.
- *
- * TO WIRE UP THE REAL BACKEND:
- *   - startGame      -> call minesApi.start(), store the returned
- *                       sessionId, drop mockMinePositions entirely
- *   - revealTile      -> call minesApi.reveal({ sessionId, tileIndex })
- *                       and branch on response.safe instead of
- *                       checking the local `mines` Set
- *   - cashOut        -> call minesApi.cashOut({ sessionId }), then
- *                       call useAuth().setCoins(response.newBalance)
- *                       so the nav bar balance stays in sync
- *   - startGame       -> after a successful start, also call
- *                       setCoins(balance - stake) via useAuth()
+ * Owns all Mines game state. Runs client-side against mockMinePositions()
+ * for local demo purposes.
  */
 export function useMinesGame(initialBalance = START_BALANCE, onBalanceChange) {
-  const [balance, setBalanceRaw] = useState(initialBalance);
+  const [balance, setBalanceRaw] = useState(initialBalance ?? START_BALANCE);
 
-  // Wrap setBalance so every change also notifies the auth context,
-  // keeping the nav bar's displayed balance in sync with gameplay.
+  useEffect(() => {
+    if (typeof initialBalance === "number") {
+      setBalanceRaw(initialBalance);
+    }
+  }, [initialBalance]);
+
   const setBalance = useCallback(
     (updater) => {
       setBalanceRaw((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
-        onBalanceChange?.(next);
         return next;
       });
     },
-    [onBalanceChange]
+    []
   );
+
   const [stake, setStake] = useState(10);
   const [mineCount, setMineCount] = useState(3);
 
@@ -64,13 +55,15 @@ export function useMinesGame(initialBalance = START_BALANCE, onBalanceChange) {
 
   const startGame = useCallback(() => {
     if (stake <= 0 || stake > balance) return;
-    setBalance((b) => b - stake);
+    const nextBalance = balance - stake;
+    setBalanceRaw(nextBalance);
+    onBalanceChange?.(nextBalance);
     setMines(mockMinePositions(GRID_SIZE, mineCount));
     setRevealed([]);
     setHitTile(null);
     setLastPayout(null);
     setStatus("active");
-  }, [stake, mineCount, balance]);
+  }, [stake, mineCount, balance, onBalanceChange]);
 
   const revealTile = useCallback(
     (idx) => {
@@ -88,21 +81,25 @@ export function useMinesGame(initialBalance = START_BALANCE, onBalanceChange) {
       // Auto-cashout when every safe tile has been cleared
       if (next.length === maxSafeReveals) {
         const payout = Math.round(stake * payoutMultiplier(GRID_SIZE, mineCount, next.length));
-        setBalance((b) => b + payout);
+        const nextBalance = balance + payout;
+        setBalanceRaw(nextBalance);
+        onBalanceChange?.(nextBalance);
         setLastPayout(payout);
         setStatus("cashed_out");
       }
     },
-    [status, revealed, mines, maxSafeReveals, stake, mineCount]
+    [status, revealed, mines, maxSafeReveals, stake, mineCount, balance, onBalanceChange]
   );
 
   const cashOut = useCallback(() => {
     if (status !== "active" || revealed.length === 0) return;
     const payout = Math.round(stake * currentMultiplier);
-    setBalance((b) => b + payout);
+    const nextBalance = balance + payout;
+    setBalanceRaw(nextBalance);
+    onBalanceChange?.(nextBalance);
     setLastPayout(payout);
     setStatus("cashed_out");
-  }, [status, revealed.length, stake, currentMultiplier]);
+  }, [status, revealed.length, stake, currentMultiplier, balance, onBalanceChange]);
 
   const playAgain = useCallback(() => {
     setStatus("idle");

@@ -16,13 +16,25 @@ export function useCrashSocket(onBalanceChange) {
   const [myBet, setMyBet] = useState(null); // { sessionId, stake }
   const [myCashout, setMyCashout] = useState(null); // { multiplier, payout }
   const [error, setError] = useState("");
+  const [history, setHistory] = useState([1.85, 2.45, 1.12, 5.2, 1.45, 3.1, 1.05]);
 
   useEffect(() => {
     const socket = io(SOCKET_URL, { withCredentials: true });
     socketRef.current = socket;
 
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
+    socket.on("connect", () => {
+      setConnected(true);
+      setError("");
+    });
+
+    socket.on("disconnect", () => {
+      setConnected(false);
+    });
+
+    socket.on("connect_error", (err) => {
+      setConnected(false);
+      setError(`Server connection error: ${err.message}`);
+    });
 
     socket.on("round:betting", ({ roundId, serverSeedHash }) => {
       setPhase("betting");
@@ -33,31 +45,40 @@ export function useCrashSocket(onBalanceChange) {
       setCrashResult(null);
       setMyBet(null);
       setMyCashout(null);
+      setError("");
     });
 
     socket.on("round:started", ({ startedAt }) => {
       setPhase("running");
       setStartedAt(startedAt);
+      setLiveMultiplier(1);
     });
 
     socket.on("round:crashed", ({ crashPoint, serverSeed }) => {
       setPhase("crashed");
       setCrashResult({ crashPoint, serverSeed });
+      setLiveMultiplier(crashPoint);
+      if (crashPoint) {
+        setHistory((prev) => [...prev.slice(-13), crashPoint]);
+      }
     });
 
     socket.on("crash:bet:ok", (result) => {
       setMyBet(result);
       onBalanceChange?.(result.newBalance);
     });
+
     socket.on("crash:bet:error", ({ error }) => setError(error));
-socket.on("crash:cashout:ok", (result) => {
-  setMyCashout(result);
-  onBalanceChange?.(result.newBalance);
-});
+
+    socket.on("crash:cashout:ok", (result) => {
+      setMyCashout(result);
+      onBalanceChange?.(result.newBalance);
+    });
+
     socket.on("crash:cashout:error", ({ error }) => setError(error));
 
     return () => socket.disconnect();
-  }, []);
+  }, [onBalanceChange]);
 
   // Client computes the live multiplier locally every frame using the
   // same formula the server uses to detect the crash — deterministic,
@@ -71,7 +92,7 @@ socket.on("crash:cashout:ok", (result) => {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [phase, startedAt], [onBalanceChange]);
+  }, [phase, startedAt]);
 
   const placeBet = useCallback((stake) => {
     setError("");
@@ -83,5 +104,20 @@ socket.on("crash:cashout:ok", (result) => {
     socketRef.current?.emit("crash:cashout");
   }, []);
 
-  return { connected, phase, roundId, serverSeedHash, liveMultiplier, crashResult, myBet, myCashout, error, placeBet, cashOut };
+  return {
+    connected,
+    phase,
+    roundId,
+    serverSeedHash,
+    liveMultiplier,
+    multiplier: liveMultiplier,
+    crashResult,
+    myBet,
+    hasBet: Boolean(myBet),
+    myCashout,
+    error,
+    history,
+    placeBet,
+    cashOut,
+  };
 }

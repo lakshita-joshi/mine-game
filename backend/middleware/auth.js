@@ -8,12 +8,16 @@ export async function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(payload.sub).select("role isBanned");
+    const userId = payload.userId || payload.sub || payload.id;
+
+    if (!userId) return res.status(401).json({ error: "Invalid session" });
+
+    const user = await User.findById(userId).select("role isBanned");
 
     if (!user) return res.status(401).json({ error: "Invalid session" });
     if (user.isBanned) return res.status(403).json({ error: "This account has been suspended" });
 
-    req.user = { id: payload.sub, role: user.role };
+    req.user = { id: userId, userId, role: user.role };
     next();
   } catch {
     return res.status(401).json({ error: "Invalid or expired session" });
