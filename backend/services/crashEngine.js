@@ -3,7 +3,7 @@ import { generateSeedPair } from "../utils/provablyFair.js";
 import { computeCrashPoint, multiplierAtElapsed } from "../utils/crashMath.js";
 import { deductStake, creditPayout } from "./walletService.js";
 
-const BETTING_DURATION_MS = 5000;
+const BETTING_DURATION_MS = 10000;
 const CRASH_PAUSE_MS = 3000;
 const TICK_INTERVAL_MS = 100;
 
@@ -34,11 +34,13 @@ function startBettingPhase() {
     startedAt: null,
     bets: new Map(),
   };
+  current.bettingEndsAt = Date.now() + BETTING_DURATION_MS;
 
   io.emit("round:betting", {
     roundId: current.roundId,
     serverSeedHash: current.serverSeedHash,
     bettingEndsInMs: BETTING_DURATION_MS,
+    bettingEndsAt: current.bettingEndsAt,
   });
 
   setTimeout(startRunningPhase, BETTING_DURATION_MS);
@@ -130,5 +132,11 @@ export async function cashOut(userId) {
 
 export function getCurrentRoundSnapshot() {
   if (!current) return null;
-  return { status: current.status, roundId: current.roundId, serverSeedHash: current.serverSeedHash, startedAt: current.startedAt };
+  return {
+    status: current.status,
+    roundId: current.roundId,
+    serverSeedHash: current.serverSeedHash,
+    startedAt: current.startedAt,
+    bettingEndsAt: current.bettingEndsAt,
+  };
 }

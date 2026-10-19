@@ -17,6 +17,7 @@ export function useCrashSocket(onBalanceChange) {
   const [myCashout, setMyCashout] = useState(null); // { multiplier, payout }
   const [error, setError] = useState("");
   const [history, setHistory] = useState([1.85, 2.45, 1.12, 5.2, 1.45, 3.1, 1.05]);
+  const [bettingEndsAt, setBettingEndsAt] = useState(null);
 
   useEffect(() => {
     const socket = io(SOCKET_URL, { withCredentials: true });
@@ -36,8 +37,9 @@ export function useCrashSocket(onBalanceChange) {
       setError(`Server connection error: ${err.message}`);
     });
 
-    socket.on("round:betting", ({ roundId, serverSeedHash }) => {
+    socket.on("round:betting", ({ roundId, serverSeedHash, bettingEndsInMs  }) => {
       setPhase("betting");
+      setBettingEndsAt(Date.now() + (bettingEndsInMs ?? 0));
       setRoundId(roundId);
       setServerSeedHash(serverSeedHash);
       setStartedAt(null);
@@ -107,6 +109,7 @@ export function useCrashSocket(onBalanceChange) {
   return {
     connected,
     phase,
+    bettingEndsAt,
     roundId,
     serverSeedHash,
     liveMultiplier,
@@ -119,5 +122,6 @@ export function useCrashSocket(onBalanceChange) {
     history,
     placeBet,
     cashOut,
+
   };
 }

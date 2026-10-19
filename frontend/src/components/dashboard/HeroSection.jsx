@@ -69,13 +69,18 @@ export default function HeroSection({ username }) {
             <Zap size={16} />
             Play Now
           </Link>
-          <Link
-            to="/dashboard#games"
+          <button
+            type="button"
+            onClick={() => {
+              document
+                .getElementById("games")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
             className="flex items-center gap-1.5 rounded-xl border border-rim-bright bg-elevated/70 px-6 py-3 font-display text-sm font-semibold text-chalk backdrop-blur-sm transition-all hover:border-gold/30 hover:text-gold"
           >
             Explore Games
             <ChevronRight size={15} />
-          </Link>
+          </button>
         </div>
 
         {/* Stats */}

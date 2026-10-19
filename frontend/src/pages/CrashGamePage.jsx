@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../components/layout/NavBar.jsx";
 import BottomNav from "../components/layout/BottomNav.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import { useCrashSocket } from "../hooks/useCrashSocket.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
+const BETTING_SECONDS = 10;
 function CrashHistory({ history }) {
   if (!history?.length) return null;
   return (
@@ -34,6 +35,7 @@ export default function CrashGamePage() {
   const { user, setCoins } = useAuth();
   const [stake, setStake] = useState(10);
   const [showSeed, setShowSeed] = useState(false);
+  const [countdown, setCountdown] = useState(null);
 
   const {
     connected,
@@ -50,6 +52,19 @@ export default function CrashGamePage() {
     placeBet,
     cashOut,
   } = useCrashSocket(setCoins);
+
+  useEffect(() => {
+    if (phase !== "betting") {
+      setCountdown(null);
+      return;
+    }
+    const endsAt = Date.now() + BETTING_SECONDS * 1000;
+    const tick = () =>
+      setCountdown(Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [phase]);
 
   const currentMultiplier =
     phase === "crashed" && crashResult?.crashPoint
@@ -100,18 +115,22 @@ export default function CrashGamePage() {
           {phase === "crashed" && <div className="absolute inset-0 bg-loss/5" />}
 
           <div className="relative text-center">
-            <div
-              className={`font-display text-7xl font-bold sm:text-8xl ${multColor} transition-colors`}
-              style={{
-                textShadow: isRunning
-                  ? "0 0 40px rgba(34,197,94,0.4)"
-                  : phase === "crashed"
-                  ? "0 0 40px rgba(239,68,68,0.3)"
-                  : "none",
-              }}
-            >
-              {currentMultiplier.toFixed(2)}×
-            </div>
+          <div
+            className={`font-display text-7xl font-bold sm:text-8xl ${
+              isBetting ? "text-gold" : multColor
+            } transition-colors`}
+            style={{
+              textShadow: isRunning
+                ? "0 0 40px rgba(34,197,94,0.4)"
+                : phase === "crashed"
+                ? "0 0 40px rgba(239,68,68,0.3)"
+                : "none",
+            }}
+          >
+            {isBetting && countdown !== null
+              ? `${countdown}s`
+              : `${currentMultiplier.toFixed(2)}×`}
+          </div>
             <div className="mt-2 font-mono text-sm uppercase tracking-widest text-fog">
               {phase === "connecting" && "Connecting to game server…"}
               {isBetting && (hasBet ? "Bet placed! Waiting for launch…" : "Place your bets…")}
