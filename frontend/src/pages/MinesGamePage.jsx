@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect  } from "react";
+import { Bomb } from "lucide-react";
 import NavBar from "../components/layout/NavBar.jsx";
 import BottomNav from "../components/layout/BottomNav.jsx";
 import ProvablyFairBadge from "../components/game/ProvablyFairBadge.jsx";
@@ -14,6 +15,9 @@ export default function MinesGamePage() {
   const handleBalanceChange = useCallback((coins) => setCoins(coins), [setCoins]);
   const game  = useMinesGame(user?.coins, handleBalanceChange);
   const isOver = game.status === "busted" || game.status === "cashed_out";
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-void pb-20 sm:pb-0">
@@ -23,7 +27,10 @@ export default function MinesGamePage() {
         {/* Page header */}
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold text-chalk">💎 Mines</h1>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-chalk">
+            <Bomb size={24} className="text-gold" />
+            Mines
+          </h1>
             <p className="mt-0.5 font-mono text-xs text-fog">
               Reveal safe tiles, cash out before hitting a mine
             </p>

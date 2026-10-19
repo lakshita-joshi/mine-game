@@ -1,5 +1,5 @@
 import React from "react";
-import { Gem, Zap } from "lucide-react";
+import { Gem, Bomb } from "lucide-react";
 
 export default function Tile({ idx, isRevealed, showAsMine, isHit, disabled, onClick }) {
   const flipped = isRevealed || showAsMine;
@@ -51,7 +51,7 @@ export default function Tile({ idx, isRevealed, showAsMine, isHit, disabled, onC
           }}
         >
           {showAsMine ? (
-            <Zap size={18} strokeWidth={2} className="text-loss" />
+            <Bomb size={18} strokeWidth={2} className="text-loss" />
           ) : (
             <Gem size={18} strokeWidth={1.75} className="text-win" />
           )}
