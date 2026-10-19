@@ -9,16 +9,11 @@ export class InsufficientFundsError extends Error {
 }
 
 export async function deductStake(userId, amount) {
-  console.log("deductStake called with:", { userId, typeofUserId: typeof userId, amount, typeofAmount: typeof amount });
-
   const user = await User.findOneAndUpdate(
     { _id: userId, coins: { $gte: amount } },
     { $inc: { coins: -amount } },
     { new: true }
   );
-
-  console.log("findOneAndUpdate result:", user);
-
   if (!user) throw new InsufficientFundsError();
   return user.coins;
 }

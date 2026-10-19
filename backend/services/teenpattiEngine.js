@@ -2,8 +2,7 @@ import Table from "../models/Table.js";
 import { generateSeedPair } from "../utils/provablyFair.js";
 import { dealHands } from "../utils/dealCards.js";
 import { evaluateHand, compareHands } from "../utils/teenPattiLogic.js";
-import { deductStake, creditPayout } from "./walletService.js";
-import { getBalance } from "./walletService.js";
+import { deductStake, creditPayout, getBalance } from "./walletService.js";
 
 export async function joinTable(tableId, userId) {
   const table = await Table.findById(tableId);
@@ -16,8 +15,13 @@ export async function joinTable(tableId, userId) {
   return table;
 }
 
-export async function startRound(tableId) {
+export async function startRound(tableId, userId) {
   const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
+  if (!table) throw new Error("Table not found");
+  if (table.status === "betting") throw new Error("A round is already in progress");
+  if (userId && !table.seats[0]?.user.equals(userId)) {
+    throw new Error("Only the host can start the round");
+  }
   if (table.seats.length < 2) throw new Error("Need at least 2 players to start");
 
   const { serverSeed, serverSeedHash } = generateSeedPair();
@@ -51,9 +55,24 @@ export async function startRound(tableId) {
 }
 
 /**
- * A bet is either "blind" (playing without looking at your hand —
- * costs half as much) or "seen" (after looking — costs the full
- * current stake level). This is the core Teen Patti betting rule.
+ * NEW: marks the player's hand as seen so the server charges the
+ * seen (2x) stake and allows side-show requests.
+ */
+export async function seeHand(tableId, userId) {
+  const table = await Table.findById(tableId);
+  if (!table) throw new Error("Table not found");
+  const seat = table.seats.find((s) => s.user.equals(userId));
+  if (!seat) throw new Error("You are not seated at this table");
+  if (table.status !== "betting") throw new Error("No round in progress");
+  if (!seat.isPlaying) throw new Error("You have already folded");
+  seat.hasSeenHand = true;
+  await table.save();
+  return table;
+}
+
+/**
+ * Valid actions: "bet" (Chaal) and "fold".
+ * Blind bets cost minStake, seen bets cost minStake * 2.
  */
 export async function placeBet(tableId, userId, { action, seesHand }) {
   const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
@@ -67,17 +86,17 @@ export async function placeBet(tableId, userId, { action, seesHand }) {
 
   if (action === "fold") {
     seat.isPlaying = false;
-    } else if (action === "bet") {
-        const stakeMultiplier = seesHand || seat.hasSeenHand ? 2 : 1;
-        const amount = table.minStake * stakeMultiplier;
-    
-        const balance = await getBalance(userId);
-        if (balance < amount) throw new Error(`Insufficient balance — need ${amount}, have ${balance}`);
-    
-        if (seesHand) seat.hasSeenHand = true;
-        await deductStake(userId, amount);
-        seat.currentStake += amount;
-        table.pot += amount;
+  } else if (action === "bet") {
+    const stakeMultiplier = seesHand || seat.hasSeenHand ? 2 : 1;
+    const amount = table.minStake * stakeMultiplier;
+
+    const balance = await getBalance(userId);
+    if (balance < amount) throw new Error(`Insufficient balance — need ${amount}, have ${balance}`);
+
+    if (seesHand) seat.hasSeenHand = true;
+    await deductStake(userId, amount);
+    seat.currentStake += amount;
+    table.pot += amount;
   } else {
     throw new Error("Invalid action");
   }
@@ -92,11 +111,7 @@ export async function placeBet(tableId, userId, { action, seesHand }) {
   await table.save();
   return table;
 }
-/**
- * Finds the seat immediately before `seatIndex` in turn order that
- * is still active (isPlaying), skipping folded seats — mirrors the
- * skip logic in advanceTurn, just walking backwards instead.
- */
+
 function findPreviousActiveSeat(table, seatIndex) {
   const seatCount = table.seats.length;
   let prev = (seatIndex - 1 + seatCount) % seatCount;
@@ -125,9 +140,6 @@ export async function requestSideShow(tableId, requesterId) {
   return {
     requesterId: requester.user,
     targetId: target.user,
-    // Not persisted to the table — this is a transient request that
-    // either resolves immediately (accept/decline) or expires; no
-    // need to survive a server restart.
   };
 }
 
@@ -137,7 +149,6 @@ export async function resolveSideShow(tableId, requesterId, targetId, accepted) 
   const targetSeat = table.seats.find((s) => s.user.equals(targetId));
 
   if (!accepted) {
-    // Declined — nothing changes, requester's turn proceeds as normal.
     return { accepted: false, table };
   }
 
@@ -146,8 +157,7 @@ export async function resolveSideShow(tableId, requesterId, targetId, accepted) 
   const targetHand = evaluateHand(targetSeat.hand);
   const result = compareHands(requesterHand, targetHand);
 
-  // Tie is treated as a loss for the requester — standard Teen Patti
-  // convention, since the requester initiated the comparison.
+  // Tie is a loss for the requester
   const loserSeat = result > 0 ? targetSeat : requesterSeat;
   loserSeat.isPlaying = false;
 
@@ -163,22 +173,22 @@ export async function resolveSideShow(tableId, requesterId, targetId, accepted) 
 }
 
 export async function autoFoldCurrentPlayer(tableId) {
-    const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
-    if (!table || table.status !== "betting") return null;
-  
-    const seat = table.seats[table.currentTurnSeatIndex];
-    if (!seat || !seat.isPlaying) return null;
-  
-    seat.isPlaying = false;
-    advanceTurn(table);
-  
-    const stillIn = table.seats.filter((s) => s.isPlaying);
-    if (stillIn.length === 1) {
-      await resolveRoundByFold(table, stillIn[0]);
-    }
-  
-    await table.save();
-    return table;
+  const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
+  if (!table || table.status !== "betting") return null;
+
+  const seat = table.seats[table.currentTurnSeatIndex];
+  if (!seat || !seat.isPlaying) return null;
+
+  seat.isPlaying = false;
+  advanceTurn(table);
+
+  const stillIn = table.seats.filter((s) => s.isPlaying);
+  if (stillIn.length === 1) {
+    await resolveRoundByFold(table, stillIn[0]);
+  }
+
+  await table.save();
+  return table;
 }
 
 function advanceTurn(table) {
@@ -199,8 +209,22 @@ async function resolveRoundByFold(table, winnerSeat) {
   table.pot = 0;
 }
 
-export async function requestShowdown(tableId) {
+/**
+ * userId is optional so existing callers keep working. When passed,
+ * only a seated, active player whose turn it is can call a showdown.
+ */
+export async function requestShowdown(tableId, userId) {
   const table = await Table.findById(tableId).select("+seats.hand +serverSeed");
+  if (!table) throw new Error("Table not found");
+  if (table.status !== "betting") throw new Error("Betting is not open");
+
+  if (userId) {
+    const seatIndex = table.seats.findIndex((s) => s.user.equals(userId));
+    if (seatIndex === -1) throw new Error("You are not seated at this table");
+    if (!table.seats[seatIndex].isPlaying) throw new Error("You have already folded");
+    if (table.currentTurnSeatIndex !== seatIndex) throw new Error("Not your turn");
+  }
+
   const activeSeats = table.seats.filter((s) => s.isPlaying);
   if (activeSeats.length < 2) throw new Error("Showdown requires at least 2 active players");
 
@@ -224,17 +248,10 @@ export async function requestShowdown(tableId) {
     winnerId: winner.user,
     serverSeed: table.serverSeed,
     hands: table.seats.map((s) => ({ userId: s.user, hand: s.isPlaying ? s.hand : null })),
-    table, // <- added
+    table,
   };
 }
-/**
- * Handles a player leaving, whether via explicit "leave" or a socket
- * disconnect. Mid-round, we can't just delete the seat — other seats'
- * indices and currentTurnSeatIndex reference array positions, and
- * removing an element would shift everything after it. So mid-round,
- * we fold them and flag leftTable; the seat is only physically
- * removed once it's safe (between rounds).
- */
+
 export async function leaveTable(tableId, userId) {
   const table = await Table.findById(tableId);
   if (!table) return null;
